@@ -1,0 +1,161 @@
+NAME
+    Test::Subs - Test your modules with a lightweight anonymous block based
+    syntax
+
+SYNOPSIS
+      use SomeModule;
+      use Test::Subs;
+  
+      test { 1 == 2 };
+
+DESCRIPTION
+    This module provide a very lightweight syntax to run "Test::Harness" or
+    "Tap::Harness" compliant test on your code.
+
+    As opposed to other similar packages, the two main functionnalities of
+    "Test::Subs" are that the tests are anonymous code block (rather than
+    list of values), which are (subjectively) cleaner and easier to read,
+    and that you do not need to pre-declare the number of tests that are
+    going to be run (so all modifications in a test file are local).
+
+    Using this module is just a matter of "use Test::Subs" followed by the
+    declaration of your tests with the functions described below. All tests
+    are then run at the end of the execution of your test file.
+
+    As a protection against some error, if the compilation phase fail, the
+    output of the test file will be one failed pseudo-test.
+
+FUNCTIONS
+    This is a list of the public function of this library. Functions not
+    listed here are for internal use only by this module and should not be
+    used in any external code unless .
+
+    All the functions described below are automatically exported into your
+    package except if you explicitely request to opposite with "use
+    Test::Subs ();".
+
+    Finally, these function must all be called from the top-level and not
+    inside of the code of another test function. That is because the library
+    must know the number of test before their execution.
+
+  test
+      test { CODE };
+      test { CODE } DESCR;
+
+    This function register a code-block containing a test. During the
+    execution of the test, the code will be run and the test will be deemed
+    successful if the returned value is "true".
+
+    The optionnal "DESCR" is a string (or an expression returning a string)
+    which will be added as a comment to the result of this test. If this
+    string contains a "printf" *conversion* (e.g. %s or %d) it will be
+    replaced by the result of the code block.
+
+  todo
+      todo { CODE };
+      todo { CODE } DESCR;
+
+    This function is the same as the function "test", except that the test
+    will be registered as *to-do*. So a failure of this test will be ignored
+    when your test is run inside a test plan by "Test::Harness" or
+    "Tap::Harness".
+
+  match
+      match { CODE } REGEXP;
+      match { CODE } REGEXP, DESCR;
+
+    This function declares a test which will succeed if the result of the
+    code block match the given regular expression.
+
+    The regexp may be given as a scalar string or as a "qr" encoded regexp.
+
+  not_ok
+      not_ok { CODE };
+      not_ok { CODE } DESCR;
+
+    This function is exactly the opposite of the "test" one. The test that
+    it declares will succeed if the code block return a "false" value.
+
+  fail
+      fail { CODE };
+      fail { CODE } DESCR;
+
+    This function declares a test that will succeed if its code block "die"
+    (raise any exception).
+
+  failwith
+      failwith { CODE } REGEXP;
+      failwith { CODE } REGEXP, DESCR;
+
+    As for the "fail" function, this function declares a test which expects
+    that its code block "die". Except that the test will succeed only if the
+    raised exception (the content of the $@ variable) match the given
+    regular expression.
+
+    The regexp may be given as a scalar string or as a "qr" encoded regexp.
+
+  comment
+      comment { CODE };
+
+    This function evaluate its code and display the resulting value on the
+    standard error handle. The buffering on "STDOUT" and "STDERR" is
+    deactivated when "Test::Subs" is used and the output of this function
+    should appear in between the result of the test when the test file is
+    run stand-alone.
+
+    This function must be used outside of the code the other functions
+    described above. The output comment to "STDERR" inside a test, just use
+    the "print" or "printf" function. The default output has been
+    "select"-ed to "STDERR" so the result of the test will not be altered.
+
+EXAMPLE
+    Here is an example of a small test file using this module.
+
+      use strict;
+      use warnings;
+      use Test::Subs;
+  
+      test { 1 == 1 } 'This is the first test';
+  
+      todo { 1 == 2 };
+  
+      not_ok { 0 };
+  
+      fail { die "fail" };
+
+    Run through "Test::Harness" this file will pass, with only the second
+    test failing (but marked *todo* so that's OK).
+
+CAVEATS
+    The standard set by "Test::Harness" is that all output to "STDOUT" is
+    interpreted by the test parser. So a test file should write additional
+    output only to "STDERR". This is what will be done by the "comment"
+    fonction. To help with this, during the execution of your test file, the
+    "STDERR" file-handle will be "select"-ed. So any un-qualified "print" or
+    "printf" call will end in "STDERR".
+
+    This package use source filtering (with "Filter::Simple"). The filter
+    applied is very simple, but there is a slight possibility that it is
+    incompatible with other source filter. If so, do not hesitate to report
+    this as a bug.
+
+BUGS
+    Please report any bugs or feature requests to
+    "bug-test-subs@rt.cpan.org", or through the web interface at
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Test-Subs>.
+
+SEE ALSO
+    Test, Test::Tiny, Test::Lite, Test::Simple
+
+AUTHOR
+    Mathias Kende (mathias@cpan.org)
+
+VERSION
+    Version 0.01 (December 2012)
+
+COPYRIGHT & LICENSE
+    Copyright 2012 © Mathias Kende. All rights reserved.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
