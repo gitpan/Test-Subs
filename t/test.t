@@ -20,6 +20,8 @@ not_ok { 0 };
 
 match { 'test' } '.{4}';
 
+debug { 0 };
+
 fail { die "fail" } 'throwing "%s"';
 
 failwith { test {1} } 'cannot call';

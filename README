@@ -49,7 +49,10 @@ FUNCTIONS
     The optionnal "DESCR" is a string (or an expression returning a string)
     which will be added as a comment to the result of this test. If this
     string contains a "printf" *conversion* (e.g. %s or %d) it will be
-    replaced by the result of the code block.
+    replaced by the result of the code block. If the description is omitted,
+    it will be replaced by the filename and line number of the test. You can
+    use an empty string '' to deactivate completely the output of a comment
+    to the test.
 
   todo
       todo { CODE };
@@ -108,6 +111,15 @@ FUNCTIONS
     the "print" or "printf" function. The default output has been
     "select"-ed to "STDERR" so the result of the test will not be altered.
 
+  debug
+      debug { CODE } DESCR;
+
+    This function register and executes a dummy test: the CODE is executed
+    and error messages (if any) are written on "STDERR" but the test always
+    succeed.
+
+    Usefull when a test fail to quickly see what is going on.
+
 EXAMPLE
     Here is an example of a small test file using this module.
 
@@ -127,6 +139,10 @@ EXAMPLE
     test failing (but marked *todo* so that's OK).
 
 CAVEATS
+    This package does not use the "Test::Builder" facility and as such is
+    not compatible with other testing modules are using "Test::Builder".
+    This may be changed in a future release.
+
     The standard set by "Test::Harness" is that all output to "STDOUT" is
     interpreted by the test parser. So a test file should write additional
     output only to "STDERR". This is what will be done by the "comment"
@@ -151,7 +167,7 @@ AUTHOR
     Mathias Kende (mathias@cpan.org)
 
 VERSION
-    Version 0.01 (December 2012)
+    Version 0.02 (January 2013)
 
 COPYRIGHT & LICENSE
     Copyright 2012 © Mathias Kende. All rights reserved.

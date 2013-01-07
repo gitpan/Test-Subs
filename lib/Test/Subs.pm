@@ -1,12 +1,12 @@
 package Test::Subs;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 use strict;
 use warnings;
 use Exporter 'import';
 use Filter::Simple;
 use Carp;
 
-our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment');
+our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment', 'debug');
 
 my (@tests, @todo, @comments);
 my ($has_run, $is_running);
@@ -14,9 +14,12 @@ my ($has_run, $is_running);
 sub check_text {
 	my ($t) = @_;
 
-	if (defined $t) {
+	if ($t) {
 		$t =~ m/^([^\n]*)/;
 		return " - $1";
+	} elsif (not defined $t) {
+		my ($package, $filename, $line) = caller(1);
+		return " - $filename at line $line";
 	} else {
 		return '';
 	}
@@ -109,6 +112,17 @@ sub comment (&) {
 	}
 }
 
+sub debug (&) {
+	my ($c) = @_;
+	check_run();
+
+	push @tests, {
+			code => sub { eval { $c->() }; print STDERR $@ if $@; 1 },
+			text => check_text($_[1])
+		};
+
+}
+
 sub print_comment {
 	my ($test) = @_;
 
@@ -132,7 +146,7 @@ sub run_test {
 	print_comment($count);
 	for my $t (@tests) {
 		my $r = eval { $t->{code}->() };
-		chomp(my $cr = $r);
+		chomp(my $cr = $r // '');
 		my $m = sprintf $t->{text}, $cr;
 		printf STDOUT "%sok %d%s\n",  ($r ? '' : 'not '), ++$count, $m;
 		print_comment($count);
@@ -213,7 +227,9 @@ returned value is C<true>.
 The optionnal C<DESCR> is a string (or an expression returning a string) which
 will be added as a comment to the result of this test. If this string contains
 a C<printf> I<conversion> (e.g. C<%s> or C<%d>) it will be replaced by the result
-of the code block.
+of the code block. If the description is omitted, it will be replaced by the
+filename and line number of the test. You can use an empty string C<''> to
+deactivate completely the output of a comment to the test.
 
 =head2 todo
 
@@ -275,6 +291,15 @@ above. The output comment to C<STDERR> inside a test, just use the C<print> or
 C<printf> function. The default output has been C<select>-ed to C<STDERR> so
 the result of the test will not be altered.
 
+=head2 debug
+
+  debug { CODE } DESCR;
+
+This function register and executes a dummy test: the CODE is executed and
+error messages (if any) are written on C<STDERR> but the test always succeed.
+
+Usefull when a test fail to quickly see what is going on.
+
 =head1 EXAMPLE
 
 Here is an example of a small test file using this module.
@@ -295,6 +320,10 @@ Run through C<Test::Harness> this file will pass, with only the second test fail
 (but marked I<todo> so that's OK).
 
 =head1 CAVEATS
+
+This package does not use the C<Test::Builder> facility and as such is not compatible
+with other testing modules are using C<Test::Builder>. This may be changed in a
+future release.
 
 The standard set by C<Test::Harness> is that all output to C<STDOUT> is
 interpreted by the test parser. So a test file should write additional output
@@ -323,12 +352,12 @@ Mathias Kende (mathias@cpan.org)
 
 =head1 VERSION
 
-Version 0.01 (December 2012)
+Version 0.02 (January 2013)
 
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2012 © Mathias Kende.  All rights reserved.
+Copyright 2013 © Mathias Kende.  All rights reserved.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
