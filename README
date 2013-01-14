@@ -115,10 +115,18 @@ FUNCTIONS
       debug { CODE } DESCR;
 
     This function register and executes a dummy test: the CODE is executed
-    and error messages (if any) are written on "STDERR" but the test always
-    succeed.
+    and error messages (if any) are written on "STDERR". The test will
+    succeed under the same condition as with the "test" function.
 
     Usefull when a test fail to quickly see what is going on.
+
+DEBUG MODE
+    You can pass a "debug" argument to the package when you are "using" it:
+
+      use Test::Subs debug => 1;
+
+    If the value supplied to this option is *true* then all call to the
+    "test" functions will behave like calls to the "debug" function.
 
 EXAMPLE
     Here is an example of a small test file using this module.
@@ -167,10 +175,10 @@ AUTHOR
     Mathias Kende (mathias@cpan.org)
 
 VERSION
-    Version 0.02 (January 2013)
+    Version 0.03 (January 2013)
 
 COPYRIGHT & LICENSE
-    Copyright 2012 © Mathias Kende. All rights reserved.
+    Copyright 2013 © Mathias Kende. All rights reserved.
 
     This program is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.

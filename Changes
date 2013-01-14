@@ -1,6 +1,10 @@
 Revision history for perl module Test::Subs
 
-0.02 2013-01-??
+0.03 2013-01-14
+
+ - Added a debug mode to the test scripts.
+
+0.02 2013-01-07
 
  - Correction to the documentation w.r.t. Test::Builder
  - minor corrections to the code

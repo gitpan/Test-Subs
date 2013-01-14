@@ -1,4 +1,4 @@
-use 5.008;
+use 5.10.1;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
@@ -8,7 +8,7 @@ WriteMakefile(
 		ABSTRACT_FROM => 'lib/Test/Subs.pm',
 		#README_FROM => 'lib/Test/Subs.pm',
 		LICENSE => 'perl',
-		MIN_PERL_VERSION => '5.8.0',
+		MIN_PERL_VERSION => '5.10.1',
 		CONFIGURE_REQUIRES => {
 				'ExtUtils::MakeMaker' => 6.3002,
 			},

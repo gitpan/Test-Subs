@@ -20,7 +20,7 @@ not_ok { 0 };
 
 match { 'test' } '.{4}';
 
-debug { 0 };
+debug { 1 };
 
 fail { die "fail" } 'throwing "%s"';
 

@@ -1,15 +1,25 @@
 package Test::Subs;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 use strict;
 use warnings;
-use Exporter 'import';
+use feature 'switch';
+use parent 'Exporter';
 use Filter::Simple;
 use Carp;
 
-our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment', 'debug');
+our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment', 'debug', 'debug_mode');
 
 my (@tests, @todo, @comments);
 my ($has_run, $is_running);
+
+my $debugm;
+
+# un-documented
+sub debug_mode {
+	my $r = $debugm;
+	$debugm = $_[0] if @_;
+	return $r;
+}
 
 sub check_text {
 	my ($t) = @_;
@@ -33,8 +43,20 @@ sub check_run {
 	}
 }
 
+sub debug (&) {
+	my ($c) = @_;
+	check_run();
+
+	push @tests, {
+			code => sub { my $r = eval { $c->() }; print STDERR $@ if $@; $r },
+			text => check_text($_[1])
+		};
+
+}
+
 sub test (&;$) {
 	check_run();
+	goto &debug if debug_mode;
 
 	push @tests, {
 			code => $_[0],
@@ -112,17 +134,6 @@ sub comment (&) {
 	}
 }
 
-sub debug (&) {
-	my ($c) = @_;
-	check_run();
-
-	push @tests, {
-			code => sub { eval { $c->() }; print STDERR $@ if $@; 1 },
-			text => check_text($_[1])
-		};
-
-}
-
 sub print_comment {
 	my ($test) = @_;
 
@@ -146,7 +157,7 @@ sub run_test {
 	print_comment($count);
 	for my $t (@tests) {
 		my $r = eval { $t->{code}->() };
-		chomp(my $cr = $r // '');
+		chomp(my $cr = $r // ''); # //
 		my $m = sprintf $t->{text}, $cr;
 		printf STDOUT "%sok %d%s\n",  ($r ? '' : 'not '), ++$count, $m;
 		print_comment($count);
@@ -168,6 +179,27 @@ END {
 FILTER {
 	$_ .= ';Test::Subs::run_test()'
 };
+
+
+sub import {
+	my ($class, @args) = @_;
+
+	while (my $o = shift @args) {
+		given ($o) {
+			when('debug') {
+				croak "Missing argument to the 'debug' option" unless @args;
+				debug_mode(shift @args);
+			}
+			default {
+				croak "Unknown argument '$o'";
+			}
+		}
+	}
+	
+	#@_ = ($class);
+	#goto &Exporter::import;
+	__PACKAGE__->export_to_level(1, $class, @EXPORT);
+}
 
 1;
 
@@ -296,9 +328,19 @@ the result of the test will not be altered.
   debug { CODE } DESCR;
 
 This function register and executes a dummy test: the CODE is executed and
-error messages (if any) are written on C<STDERR> but the test always succeed.
+error messages (if any) are written on C<STDERR>. The test will succeed under the
+same condition as with the C<test> function.
 
 Usefull when a test fail to quickly see what is going on.
+
+=head1 DEBUG MODE
+
+You can pass a C<debug> argument to the package when you are C<using> it:
+
+  use Test::Subs debug => 1;
+
+If the value supplied to this option is I<true> then all call to the C<test>
+functions will behave like calls to the C<debug> function.
 
 =head1 EXAMPLE
 
@@ -352,7 +394,7 @@ Mathias Kende (mathias@cpan.org)
 
 =head1 VERSION
 
-Version 0.02 (January 2013)
+Version 0.03 (January 2013)
 
 
 =head1 COPYRIGHT & LICENSE
