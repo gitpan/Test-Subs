@@ -111,6 +111,11 @@ FUNCTIONS
     the "print" or "printf" function. The default output has been
     "select"-ed to "STDERR" so the result of the test will not be altered.
 
+  test_pod
+      test_pod(LIST);
+
+    This function register a
+
   debug
       debug { CODE } DESCR;
 
@@ -175,7 +180,7 @@ AUTHOR
     Mathias Kende (mathias@cpan.org)
 
 VERSION
-    Version 0.03 (January 2013)
+    Version 0.04 (January 2013)
 
 COPYRIGHT & LICENSE
     Copyright 2013 © Mathias Kende. All rights reserved.

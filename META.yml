@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Test-Subs
-version:            0.03
+version:            0.04
 abstract:           Test your modules with a lightweight anonymous block based syntax
 author:
     - Mathias Kende <mathias@cpan.org>
@@ -14,6 +14,7 @@ requires:
     Exporter:        0
     Filter::Simple:  0
     perl:            5.010001
+    Pod::Checker:    0
 no_index:
     directory:
         - t

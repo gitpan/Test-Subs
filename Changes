@@ -1,5 +1,10 @@
 Revision history for perl module Test::Subs
 
+0.04 2013-01-15
+
+ - Add support for POD::Checker.
+ - Extend the functionnalities of the debug mode.
+
 0.03 2013-01-14
 
  - Added a debug mode to the test scripts.

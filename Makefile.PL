@@ -16,7 +16,8 @@ WriteMakefile(
 		PREREQ_PM => {
 				'Exporter' => 0,
 				'Filter::Simple' => 0,
-				'Carp' => 0
+				'Carp' => 0,
+				'Pod::Checker' => 0,
     		},
 	);
 

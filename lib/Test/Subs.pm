@@ -1,21 +1,24 @@
 package Test::Subs;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 use strict;
 use warnings;
 use feature 'switch';
 use parent 'Exporter';
 use Filter::Simple;
 use Carp;
+use Pod::Checker;
 
-our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment', 'debug', 'debug_mode');
+our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment',
+		'debug', 'test_pod', 'debug_mode'
+	);
 
-my (@tests, @todo, @comments);
+my (@tests, @todo, @comments,@pods);
 my ($has_run, $is_running);
 
 my $debugm;
 
 # un-documented
-sub debug_mode {
+sub debug_mode (;$) {
 	my $r = $debugm;
 	$debugm = $_[0] if @_;
 	return $r;
@@ -44,23 +47,28 @@ sub check_run {
 }
 
 sub debug (&) {
-	my ($c) = @_;
+	my ($v, $t) = @_;
 	check_run();
 
 	push @tests, {
-			code => sub { my $r = eval { $c->() }; print STDERR $@ if $@; $r },
-			text => check_text($_[1])
+			code => sub {
+					my $r = eval { $v->() };
+					print STDERR $@ if $@;
+					$r
+				},
+			text => check_text($t)
 		};
 
 }
 
 sub test (&;$) {
+	my ($v, $t) = @_;
 	check_run();
 	goto &debug if debug_mode;
 
 	push @tests, {
-			code => $_[0],
-			text => check_text($_[1])
+			code => sub { eval { $v->() } },
+			text => check_text($t)
 		};
 }
 
@@ -71,19 +79,29 @@ sub match (&$;$) {
 
 	$re = qr/$re/ if not ref $re;
 	push @tests, {
-			code => sub { $v->() =~ m/$re/ }, 
+			code => sub {
+					my $r = eval { $v->() };
+					if ($@) {
+						print STDERR $@ if debug_mode;
+						return;
+					} elsif (not defined $r) {
+						print STDERR "test sub returned 'undef'\n" if debug_mode;
+						return;	
+					} elsif ($r =~ m/$re/) {
+						return 1;
+					} else {
+						print STDERR "'$r' does not match '$re'\n" if debug_mode;
+						return;
+					}
+				},
 			text => check_text($t)
 		};
 }
 
 sub todo (&;$) {
 	check_run();
-
-	push @tests, {
-			code => $_[0],
-			text => check_text($_[1])
-		};
-	push @todo, scalar(@tests)
+	push @todo, (scalar(@tests) + 1);
+	goto &test;
 }
 
 sub not_ok (&;$) {
@@ -92,18 +110,18 @@ sub not_ok (&;$) {
 	check_run();
 
 	push @tests, {
-			code => sub { not $v->() },
-			text => check_text($_[1])
-		};
-}
-
-sub fail (&;$) {
-	my $v = $_[0];
-
-	check_run();
-
-	push @tests, {
-			code => sub { eval { $v->() }; $@ }, 
+			code => sub {
+					my $r = eval { $v->() };
+					if ($@) {
+						print STDERR $@ if debug_mode;
+						return;
+					} elsif ($r) {
+						print STDERR "Test sub returned '$r', expected a false value\n" if debug_mode;
+						return;
+					} else {
+						return 1;
+					}
+				},
 			text => check_text($_[1])
 		};
 }
@@ -115,9 +133,29 @@ sub failwith (&$;$) {
 
 	$re = qr/$re/ if not ref $re;
 	push @tests, {
-			code => sub { eval { $v->() }; $@ =~ m/$re/ }, 
+			code => sub {
+					eval { $v->() };
+					if ($@ && $@ =~ m/$re/) {
+						return 1;
+					} elsif ($@) {
+						print STDERR "'$@' does not match '$re'\n" if debug_mode;
+						return;
+					} else {
+						print STDERR "Test sub did not return any exception\n" if debug_mode;
+						return;					
+					}
+				}, 
 			text => check_text($t)
 		};
+}
+
+sub fail (&;$) {
+	my ($v, $t) = @_;
+	&failwith($v, qr//, $t);
+}
+
+sub test_pod (@) {
+	push @pods, @_;
 }
 
 sub comment (&) {
@@ -134,10 +172,10 @@ sub comment (&) {
 	}
 }
 
-sub print_comment {
-	my ($test) = @_;
+my $count = 0;
 
-	while (@comments and $comments[0]->{after} == $test) {
+sub print_comment {
+	while (@comments and $comments[0]->{after} == $count) {
 		my $c = shift @comments;
 		my $r = eval { $c->{comment}->() };
 		chomp($r);
@@ -145,29 +183,53 @@ sub print_comment {
 	}
 }
 
+sub print_res {
+	my ($ok, $m) = @_;
+	printf STDOUT "%sok %d%s\n",  ($ok ? '' : 'not '), ++$count, $m;
+}
+
 sub run_test {
 	$is_running = 1;
 
-	my $nb_test = @tests;
+	my $nb_test = @tests + @pods;
 	my $todo_str =  @todo ? ' todo '.join(' ', @todo).';' : '';
 	
 	printf STDOUT "1..%d%s\n", $nb_test, $todo_str;
 	
-	my $count = 0;
-	print_comment($count);
+	print_comment();
 	for my $t (@tests) {
-		my $r = eval { $t->{code}->() };
+		my $r = $t->{code}->();
 		chomp(my $cr = $r // ''); # //
 		my $m = sprintf $t->{text}, $cr;
-		printf STDOUT "%sok %d%s\n",  ($r ? '' : 'not '), ++$count, $m;
-		print_comment($count);
+		print_res($r, $m);
+		print_comment();
+	}
+	
+	for my $m (@pods) {
+		my $checker = Pod::Checker->new(-warnings => 1, -quiet => (not debug_mode()));
+		my $f = $m;
+		$f =~ s{::}{/}g;
+		$f = "lib/${f}.pm";
+		if (-e $f and -r _) {
+			eval { $checker->parse_from_file($f, \*STDERR) };
+			if ($@) {
+				print STDERR $@ if debug_mode;
+				print_res(0, " - error while checking POD for $m");
+			} else {
+				print_res(!$checker->num_errors(), " - POD check for $m");
+			}
+		} else {
+			print_res(0, " - Cannot read $f");
+		}
 	}
 
 	$has_run = 1;
 }
 
 BEGIN {
+	$| = 1;
 	select(STDERR);
+	$| = 1;
 }
 
 END {
@@ -323,6 +385,12 @@ above. The output comment to C<STDERR> inside a test, just use the C<print> or
 C<printf> function. The default output has been C<select>-ed to C<STDERR> so
 the result of the test will not be altered.
 
+=head2 test_pod
+
+  test_pod(LIST);
+
+This function register a 
+
 =head2 debug
 
   debug { CODE } DESCR;
@@ -394,8 +462,7 @@ Mathias Kende (mathias@cpan.org)
 
 =head1 VERSION
 
-Version 0.03 (January 2013)
-
+Version 0.04 (January 2013)
 
 =head1 COPYRIGHT & LICENSE
 

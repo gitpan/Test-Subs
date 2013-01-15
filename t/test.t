@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::Subs;
+use Test::Subs debug => 1;
 use t::data::Test::Subs::A;
 
 our $t = 1;
@@ -25,6 +25,8 @@ debug { 1 };
 fail { die "fail" } 'throwing "%s"';
 
 failwith { test {1} } 'cannot call';
+
+test_pod('Test::Subs');
 
 __DATA__
 
