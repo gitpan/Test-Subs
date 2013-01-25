@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::Subs debug => 1;
+use Test::Subs debug => 1, pod_warn => 2;
 use t::data::Test::Subs::A;
 
 our $t = 1;

@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:               Test-Subs
-version:            0.04
-abstract:           Test your modules with a lightweight anonymous block based syntax
+version:            0.05
+abstract:           Test your modules with a lightweight syntax based on anonymous block
 author:
     - Mathias Kende <mathias@cpan.org>
 license:            perl
