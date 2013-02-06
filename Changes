@@ -1,5 +1,9 @@
 Revision history for Perl module Test::Subs
 
+0.06 2013-02-06
+
+ - Check the presence of a ';' after the tests
+
 0.05 2013-01-26
 
  - Documents the test_pod function.

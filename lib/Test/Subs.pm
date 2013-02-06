@@ -1,5 +1,5 @@
 package Test::Subs;
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 use strict;
 use warnings;
 use feature 'switch';
@@ -9,6 +9,8 @@ use Carp;
 use Pod::Checker;
 use File::Basename;
 use File::Spec::Functions;
+use List::MoreUtils 'any';
+
 
 our @EXPORT = ('test', 'todo', 'not_ok', 'match', 'fail', 'failwith', 'comment',
 		'debug', 'test_pod'
@@ -77,12 +79,14 @@ sub check_run {
 
 	if ($is_running) {
 		croak "You cannot call '$c[3]' inside of an other test"
+	} elsif (any { m/__BAD_MARKER__/ } @_) {
+		croak "Improper syntax, you may have forgotten a ';'"
 	}
 }
 
 sub debug (&;$) {
 	my ($v, $t) = @_;
-	check_run();
+	&check_run;
 
 	push @tests, {
 			code => sub {
@@ -93,23 +97,26 @@ sub debug (&;$) {
 			text => check_text($t)
 		};
 
+	return '__BAD_MARKER__';
 }
 
 sub test (&;$) {
 	my ($v, $t) = @_;
-	check_run();
+	&check_run;
 	goto &debug if debug_mode;
 
 	push @tests, {
 			code => sub { eval { $v->() } },
 			text => check_text($t)
 		};
+
+	return '__BAD_MARKER__';
 }
 
 sub match (&$;$) {
 	my ($v, $re, $t) = @_;
 
-	check_run();
+	&check_run;
 
 	$re = qr/$re/ if not ref $re;
 	push @tests, {
@@ -130,18 +137,22 @@ sub match (&$;$) {
 				},
 			text => check_text($t)
 		};
+
+	return '__BAD_MARKER__';
 }
 
 sub todo (&;$) {
-	check_run();
+	&check_run;
 	push @todo, (scalar(@tests) + 1);
 	goto &test;
+
+	return '__BAD_MARKER__';
 }
 
 sub not_ok (&;$) {
 	my $v = $_[0];
 
-	check_run();
+	&check_run;
 
 	push @tests, {
 			code => sub {
@@ -158,12 +169,14 @@ sub not_ok (&;$) {
 				},
 			text => check_text($_[1])
 		};
+
+	return '__BAD_MARKER__';
 }
 
 sub failwith (&$;$) {
 	my ($v, $re, $t) = @_;
 
-	check_run();
+	&check_run;
 
 	$re = qr/$re/ if not ref $re;
 	push @tests, {
@@ -181,15 +194,21 @@ sub failwith (&$;$) {
 				}, 
 			text => check_text($t)
 		};
+
+	return '__BAD_MARKER__';
 }
 
 sub fail (&;$) {
 	my ($v, $t) = @_;
-	&failwith($v, qr//, check_text($t));
+	&failwith($v, qr//, check_text($t), @_); # @_ est là juste pour le test du marqueur
+
+	return '__BAD_MARKER__';
 }
 
 sub test_pod (@) {
 	push @pods, @_;
+
+	return '__BAD_MARKER__';
 }
 
 sub comment (&) {
@@ -204,6 +223,8 @@ sub comment (&) {
 				after => scalar(@tests)
 			};
 	}
+
+	return '__BAD_MARKER__';
 }
 
 my $count = 0;
@@ -258,6 +279,8 @@ sub run_test {
 	}
 
 	$has_run = 1;
+
+	return 1; # pour le mécanisme de 'do' utilisé dans CLI-Args/t/magic.t
 }
 
 BEGIN {
@@ -541,7 +564,7 @@ Mathias Kende (mathias@cpan.org)
 
 =head1 VERSION
 
-Version 0.05 (January 2013)
+Version 0.06 (February 2013)
 
 =head1 COPYRIGHT & LICENSE
 

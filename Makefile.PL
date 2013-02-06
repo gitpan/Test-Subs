@@ -18,6 +18,7 @@ WriteMakefile(
 				'Filter::Simple' => 0,
 				'Carp' => 0,
 				'Pod::Checker' => 0,
+				'List::MoreUtils' => 0,
     		},
 	);
 
