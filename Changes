@@ -1,5 +1,9 @@
 Revision history for Perl module Test::Subs
 
+0.07 2013-02-21
+
+ - Add a 'skip' functionnalities
+
 0.06 2013-02-06
 
  - Check the presence of a ';' after the tests
