@@ -112,7 +112,7 @@ FUNCTIONS
     "select"-ed to "STDERR" so the result of the test will not be altered.
 
   skip (new in 0.07)
-      skip 'reason' unless eval { use Foo::Bar };
+      skip 'reason' unless eval 'use Foo::Bar';
 
     This function allows to skip a test file. It must be used outside of
     test subs of the other functions. You will typically use it to disable a
@@ -231,7 +231,7 @@ AUTHOR
     Mathias Kende (mathias@cpan.org)
 
 VERSION
-    Version 0.07 (February 2013)
+    Version 0.08 (February 2013)
 
 COPYRIGHT & LICENSE
     Copyright 2013 © Mathias Kende. All rights reserved.

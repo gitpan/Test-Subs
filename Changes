@@ -1,5 +1,10 @@
 Revision history for Perl module Test::Subs
 
+0.08 2013-03-17
+
+ - Fix some typo in the documentation
+ - Add a warning when the test are run in debug mode
+
 0.07 2013-02-21
 
  - Add a 'skip' functionnalities

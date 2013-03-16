@@ -1,5 +1,5 @@
 package Test::Subs;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 use strict;
 use warnings;
 use feature 'switch';
@@ -261,6 +261,8 @@ sub skip {
 sub run_test {
 	$is_running = 1;
 
+	printf STDERR "Running tests in DEBUG mode\n" if $debug_mode;
+
 	my $nb_test = @tests + @pods;
 	my $todo_str =  @todo ? ' todo '.join(' ', @todo).';' : '';
 	
@@ -467,7 +469,7 @@ the result of the test will not be altered.
 
 =head2 skip (new in 0.07)
 
-  skip 'reason' unless eval { use Foo::Bar };
+  skip 'reason' unless eval 'use Foo::Bar';
 
 This function allows to skip a test file. It must be used outside of test subs
 of the other functions. You will typically use it to disable a test file if the
@@ -591,7 +593,7 @@ Mathias Kende (mathias@cpan.org)
 
 =head1 VERSION
 
-Version 0.07 (February 2013)
+Version 0.08 (March 2013)
 
 =head1 COPYRIGHT & LICENSE
 
